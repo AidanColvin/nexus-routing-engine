@@ -1,0 +1,13 @@
+biopharma:
+  routes:
+    - oncology
+    - immunology
+    - vaccines
+    - neurology
+    - rare_disease
+
+public_health:
+  routes:
+    - epidemiology
+    - health_equity
+    - outcomes_research

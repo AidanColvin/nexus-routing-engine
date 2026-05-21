@@ -1,0 +1,12 @@
+primary:
+  - sec
+  - nih_reporter
+  - clinicaltrials
+  - pubmed
+  - official_company
+  - official_unc
+
+secondary:
+  - linkedin
+  - third_party_bios
+  - market_research

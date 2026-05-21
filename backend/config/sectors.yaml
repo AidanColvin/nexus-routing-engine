@@ -1,0 +1,11 @@
+biopharma:
+  routes: [oncology, immunology, vaccines, neurology, rare_disease]
+
+public_health:
+  routes: [epidemiology, health_equity, outcomes_research]
+
+digital_health:
+  routes: [ehr, clinical_decision_support, remote_monitoring]
+
+ai_data:
+  routes: [machine_learning, nlp, computer_vision, bioinformatics]

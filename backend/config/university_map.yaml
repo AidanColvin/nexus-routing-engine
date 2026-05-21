@@ -1,0 +1,25 @@
+unc_chapel_hill:
+  campus_wide:
+    - renci
+    - biomedical_informatics
+    - data_science
+
+  pharmacy:
+    - medicinal_chemistry
+    - structural_biology
+    - chemical_biology
+
+  medicine:
+    - translational_research
+    - disease_models
+    - clinical_trials
+
+  gillings:
+    - epidemiology
+    - biostatistics
+    - public_health_policy
+
+  data_science_society:
+    - machine_learning
+    - data_engineering
+    - health_informatics
