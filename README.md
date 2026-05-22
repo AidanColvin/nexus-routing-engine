@@ -1,132 +1,190 @@
 # Nexus Routing Engine
 
-Evidence-first workflow engine for generating UNC-Chapel Hill partnership reports from company and university sources.
+Evidence-first AI pipeline for generating UNC-Chapel Hill partnership reports from any company name. Type a company, press Enter, get a fully structured, citation-backed intelligence brief in minutes — free, local, no API costs.
 
-The system ingests company and institutional materials, extracts structured entities, routes them through sector-specific alignment logic, verifies each claim against prioritized sources, and renders a citation-backed report with confidence annotations [cite:5].
+---
 
-## Overview
+## What It Does
 
-Nexus Routing Engine is designed to produce highly specific, source-grounded reports that map corporate strategy to UNC-Chapel Hill’s overall research ecosystem and to school-level units such as Pharmacy, Medicine, and Gillings. The system is optimized for accuracy, traceability, and repeatability rather than broad qualitative matching [cite:5].
+Nexus takes a company name as its only input and produces a complete partnership intelligence report mapping that company's research priorities, pipeline programs, and key personnel to specific UNC-Chapel Hill schools, institutes, faculty, and research centers.
 
-Each report is built from a standardized evidence pipeline so that every claim can be traced to a source category and every alignment can be justified with structured metadata. The workflow is intentionally modular so new sectors, new universities, or new source connectors can be added without rewriting the core engine [cite:5].
+Every claim in the report is tied to a source. Every UNC match is paired with a named faculty member or center and their real research focus. The output is ready for executive briefings, partnership development meetings, and internal research.
+
+---
 
 ## Features
 
-- Company profile ingestion from filings, press releases, investor decks, websites, and public databases.
-- Corporate priority extraction for therapeutic areas, technology platforms, business strategy, and partnership signals.
-- UNC-CH mapping at two levels: campus-wide capabilities and school-specific alignment.
-- Source-ranking and verification to prevent unsupported claims.
-- Structured markdown output with inline citations and confidence labels.
-- Configurable sector routing for life sciences, public health, AI, business, and other domains [cite:5].
+- **Single-input web UI** — type a company name, press Enter, get a report
+- **Live streaming output** — watch the report write itself token by token in real time
+- **100% free and local** — runs on Ollama with open-source models, no API keys, no usage costs
+- **Full pipeline automation** — sector routing, UNC unit mapping, source verification, and report rendering in one pass
+- **Structured report format** — Company Overview, Basic Info, UNC Connections, Talking Points, Pipeline Alignment, and numbered References every time
+- **Dual export** — download the finished report as Markdown or styled PDF
+- **Source verification hierarchy** — primary sources (SEC, NIH, ClinicalTrials, PubMed) outrank secondary sources (bios, aggregators); unsupported claims are dropped
+- **YAML-configured routing** — sectors, UNC units, and source tiers are all editable without touching code
+- **Model auto-selection** — uses the best available local model automatically
+
+---
 
 ## Architecture
 
-The pipeline is organized into five stages:
+The pipeline runs in five stages every time a company name is submitted.
 
-1. **Ingestion**  
-   Collects company profiles, filings, press releases, university pages, grant records, and research database outputs.
-
-2. **Extraction**  
-   Identifies entities such as executives, therapeutic programs, research themes, grants, labs, centers, and institutional units.
-
-3. **Routing**  
-   Maps the company into a sector-specific alignment path, such as biopharma, digital health, public health, or AI.
-
-4. **Verification**  
-   Validates each claim against prioritized sources, including official corporate materials, `.edu` domains, `.gov` databases, and peer-reviewed literature.
-
-5. **Report Rendering**  
-   Produces a structured report in markdown or PDF with inline citations and confidence annotations [cite:5].
-
-The architecture is intentionally deterministic at the verification layer so that the system does not overstate relationships between a company and UNC-Chapel Hill. That makes the output suitable for research, partnership development, and executive-facing materials [cite:5][cite:8].
-
-## Data Model
-
-The engine uses typed entities rather than free-form text wherever possible.
-
-### Core objects
-
-- `CompanyProfile`
-- `CorporatePriority`
-- `SectorCategory`
-- `UniversityMatch`
-- `VerificationResult`
-- `ReportSection`
-
-### Example schema
-
-```python
-from pydantic import BaseModel
-from typing import List, Optional
-
-class CorporatePriority(BaseModel):
-    theme: str
-    evidence: str
-    source_url: str
-    confidence: float
-
-class UniversityMatch(BaseModel):
-    unit_name: str
-    level: str  # "university" or "school"
-    rationale: str
-    source_url: str
-    confidence: float
-
-class CompanyProfile(BaseModel):
-    company_name: str
-    sector: str
-    headquarters: Optional[str]
-    priorities: List[CorporatePriority] = []
-    matches: List[UniversityMatch] = []
+```
+Company Name
+     │
+     ▼
+1. Sector Routing          config/sectors.yaml
+     │                     Maps company to biopharma / public_health / AI / etc.
+     ▼
+2. UNC Unit Mapping        config/university_map.yaml
+     │                     Identifies relevant schools, centers, and institutes
+     ▼
+3. Source Verification     config/sources.yaml
+     │                     Enforces primary > secondary source hierarchy
+     ▼
+4. AI Report Generation    backend/pipeline/generator.py
+     │                     Ollama LLM writes structured markdown with citations
+     ▼
+5. Rendering               backend/pipeline/renderer.py
+                           Markdown → styled HTML (browser) + PDF (download)
 ```
 
-Using typed schemas makes the workflow easier to test and makes report generation more reproducible across companies [cite:5].
+The web layer streams the generation output token by token using Server-Sent Events so you see the report being written in real time.
 
-## Verification Strategy
+---
 
-All extracted claims pass through a source-ranking layer before they can appear in the final report.
+## Project Structure
 
-### Priority order
+```
+nexus-routing-engine/
+├── app.py                          Flask web server and SSE streaming endpoint
+├── run.sh                          One-command startup script
+├── requirements.txt
+├── config/
+│   ├── sectors.yaml                Sector-to-route mapping
+│   ├── sources.yaml                Source tier definitions
+│   └── university_map.yaml         UNC schools, centers, and research units
+├── backend/
+│   ├── pipeline/
+│   │   ├── generator.py            Ollama-powered report generator
+│   │   ├── renderer.py             Markdown → HTML + PDF renderer (WeasyPrint)
+│   │   └── verifier.py             Source-tier confidence scoring
+│   └── data/
+│       ├── raw/                    Example reports (sanofi.md used as format template)
+│       └── processed/
+│           ├── md/                 Generated markdown reports
+│           └── pdf/                Generated PDF reports
+└── templates/
+    └── index.html                  Single-page web UI
+```
 
-1. **Primary sources**  
-   SEC filings, earnings releases, investor presentations, NIH RePORTER, ClinicalTrials.gov, PubMed, and official UNC pages.
-
-2. **Institutional sources**  
-   `.edu`, `.gov`, and official corporate domains.
-
-3. **Secondary sources**  
-   Career aggregators, market research sites, and third-party bios, only when cross-validated by a higher-tier source [cite:5].
-
-A claim is included in the final report only if it can be supported by an acceptable source tier. If the evidence is incomplete, the engine should either downgrade the confidence or omit the claim entirely [cite:5]. That policy is central to keeping the output factual and defensible [cite:8].
+---
 
 ## Installation
+
+### 1. Install Ollama
+
+Ollama runs AI models locally on your machine.
+
+```bash
+# macOS
+brew install ollama
+```
+
+Or download from [ollama.com](https://ollama.com).
+
+### 2. Pull a model
+
+```bash
+ollama pull llama3.1:8b
+```
+
+This downloads once (~5 GB) and runs free forever. The engine also supports `llama3.2:3b`, `mistral:7b`, and `qwen2.5-coder:14b` — it picks the best available model automatically.
+
+### 3. Clone and install dependencies
 
 ```bash
 git clone https://github.com/your-org/nexus-routing-engine.git
 cd nexus-routing-engine
-python -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ### Requirements
 
-```txt
+```
+flask>=3.0
+ollama>=0.4
+markdown>=3.5
+weasyprint>=60.0
 pydantic>=2.0
 PyYAML>=6.0
-requests>=2.31
-beautifulsoup4>=4.12
-pandas>=2.0
-jinja2>=3.1
+python-dotenv>=1.0
 ```
 
-You can add NLP or search tooling later, but the initial version should stay lightweight and validation-focused [cite:5].
+---
+
+## Usage
+
+```bash
+./run.sh
+```
+
+Then open **http://localhost:5050** in your browser.
+
+The startup script automatically launches Ollama if it is not already running, checks that a model is available, and starts the Flask server.
+
+### What happens when you submit a company name
+
+1. The sector router classifies the company using `config/sectors.yaml`
+2. The UNC unit map (`config/university_map.yaml`) identifies relevant schools and centers
+3. The source verification hierarchy (`config/sources.yaml`) is encoded into the generation prompt
+4. The local LLM writes the full report, streaming each token to the browser
+5. The dark terminal panel shows raw markdown in real time
+6. On completion the panel transitions to the fully rendered report
+7. Download buttons appear for Markdown and PDF
+
+---
+
+## Output Format
+
+Every report follows this fixed section structure regardless of company.
+
+```
+# COMPANY OVERVIEW
+One-paragraph summary with inline citations explaining what the company does
+and why it is a strong UNC partnership candidate.
+
+## BASIC COMPANY INFORMATION
+Name, location, website, company type, IPO status, headcount.
+
+## UNC CONNECTION
+Named individuals at the company with UNC degrees or affiliations,
+their roles, board positions, and why they are partnership entry points.
+
+## TALKING POINTS
+
+### SECTION 1: [Company] Organizational Context
+Financial momentum, key products, AI or technology strategy,
+external partnership signals — all cited.
+
+### SECTION 2: Pipeline Alignment with UNC Research
+Each subsection pairs a specific company program with a named UNC
+faculty member or center and their real research focus.
+
+## REFERENCES
+Numbered list of all cited sources with full URLs.
+```
+
+---
 
 ## Configuration
 
-The system is controlled by YAML configuration files.
+All routing logic is controlled by three YAML files. Edit them without touching any code.
 
 ### `config/sectors.yaml`
+
+Maps sector keywords to alignment routes.
 
 ```yaml
 biopharma:
@@ -146,6 +204,8 @@ public_health:
 
 ### `config/sources.yaml`
 
+Defines the source tier hierarchy used during generation. Primary sources get confidence 1.0, secondary get 0.5, and unsupported claims are dropped.
+
 ```yaml
 primary:
   - sec
@@ -162,6 +222,8 @@ secondary:
 ```
 
 ### `config/university_map.yaml`
+
+Maps UNC schools and institutes to their research domains.
 
 ```yaml
 unc_chapel_hill:
@@ -183,112 +245,105 @@ unc_chapel_hill:
     - public_health_policy
 ```
 
-This keeps the mapping logic editable without changing application code [cite:5].
+---
 
-## Usage
+## Local Models
+
+The engine selects the best available model automatically in this priority order:
+
+| Model | Size | Best for |
+|---|---|---|
+| `llama3.1:8b` | 5 GB | General reports, strong instruction following |
+| `llama3.2:3b` | 2 GB | Faster generation, smaller footprint |
+| `mistral:7b` | 4 GB | Analytical writing |
+| `qwen2.5-coder:14b` | 9 GB | Technical companies, AI/software sectors |
+
+To pull any model:
 
 ```bash
-python -m nexus_route \
-  --company "Sanofi" \
-  --sector "biopharma" \
-  --output reports/sanofi_unc.md
+ollama pull llama3.1:8b
 ```
 
-The command performs extraction, sector routing, UNC mapping, claim verification, and markdown rendering in one pass [cite:5].
+For maximum quality on a capable machine:
 
-### Expected flow
-
-1. Load company input.
-2. Extract company priorities.
-3. Load UNC campus and school mapping.
-4. Match the two datasets.
-5. Verify each match.
-6. Render the final report.
-
-## Output Format
-
-The generated report should follow a fixed structure.
-
-```md
-# Company Name × UNC-Chapel Hill
-
-## Company Overview
-## Corporate Priorities
-## UNC-Chapel Hill Alignment
-### Campus-Wide Opportunities
-### School-Specific Opportunities
-## Evidence Table
-## Confidence Notes
-## References
+```bash
+ollama pull llama3.3:70b
 ```
-
-This structure makes it easy to compare companies side by side and keeps UNC-wide opportunities separate from school-specific ones [cite:5].
-
-## Example Logic
-
-```python
-def align_company_to_unc(profile, unc_map):
-    matches = []
-    for priority in profile.priorities:
-        for unit in unc_map.get(profile.sector, []):
-            if semantic_overlap(priority.theme, unit):
-                matches.append(unit)
-    return matches
-```
-
-In practice, semantic overlap should never be the only criterion. The match must still be verified with source evidence before it reaches the final report [cite:5].
-
-## Testing
-
-The test suite should cover extraction, routing, and verification independently.
-
-### Recommended tests
-
-- `test_extract_priorities.py`
-- `test_sector_router.py`
-- `test_verifier.py`
-- `test_report_rendering.py`
-
-### Example assertions
-
-- Extracted priorities are stable across multiple source formats.
-- The sector router selects the correct UNC track.
-- Unsupported claims are rejected.
-- Report output always includes citations for factual statements [cite:5].
-
-A good testing rule is that no report should be considered valid unless every included claim has passed verification [cite:5][cite:8].
-
-## Extending the System
-
-To add a new company sector:
-
-1. Add the sector to `config/sectors.yaml`.
-2. Define relevant UNC units in `config/university_map.yaml`.
-3. Add source types required for that sector.
-4. Add tests for extraction and verification.
-5. Update the report template if the section structure changes [cite:5].
-
-To add a new university, create a new mapping file and reuse the same verification and rendering layers. The architecture should stay university-agnostic so the same engine can support other institutions later [cite:5].
-
-## Limitations
-
-This system is only as good as its source coverage and source quality. If the company or university does not publish enough authoritative information, the report should remain conservative rather than speculative [cite:5].
-
-The system should not infer faculty expertise, pipeline priorities, or partnership intent without support from verifiable sources. That discipline is what keeps the workflow credible in executive, academic, and partnership contexts [cite:5][cite:8].
-
-## Roadmap
-
-- Add automated source ingestion connectors.
-- Add vector search for evidence retrieval.
-- Add confidence scoring per claim.
-- Add PDF export.
-- Add a dashboard for reviewing pending matches.
-- Add audit logs for every verification decision [cite:5].
-
-## License
-
-Specify your preferred license here, such as MIT or Apache 2.0.
 
 ---
 
-If you want, I can turn this into a **repo-specific README** with your exact project name, Python package layout, and a more polished `Usage` + `Configuration` section.
+## API Reference
+
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/` | Web UI |
+| `POST` | `/api/generate` | Start streaming report generation |
+| `GET` | `/api/status` | Returns active model and available models |
+| `GET` | `/download/<company>/md` | Download saved Markdown report |
+| `GET` | `/download/<company>/pdf` | Download styled PDF report |
+
+### `/api/generate` request
+
+```json
+{ "company": "Pfizer" }
+```
+
+### `/api/generate` SSE event types
+
+```
+{ "type": "model",  "model": "llama3.1:8b" }
+{ "type": "chunk",  "text": "..." }
+{ "type": "done",   "html": "...", "md_url": "...", "pdf_url": "..." }
+{ "type": "error",  "message": "..." }
+```
+
+---
+
+## Verification Strategy
+
+The generation prompt strictly enforces the following rules before a claim can appear in the final report.
+
+- Every factual claim must carry an inline citation `[N]`
+- Primary sources (SEC filings, NIH RePORTER, ClinicalTrials.gov, PubMed, official `.edu` and company pages) receive confidence 1.0
+- Secondary sources (career aggregators, third-party bios, market research) receive confidence 0.5 and must be cross-validated by a primary source
+- Claims that cannot be sourced are omitted entirely — the engine never speculates
+- A shorter truthful report is always preferred over a longer speculative one
+
+---
+
+## Extending the System
+
+### Add a new sector
+
+1. Add the sector and its routes to `config/sectors.yaml`
+2. Add relevant UNC units to `config/university_map.yaml`
+3. No code changes required
+
+### Swap the AI model
+
+```bash
+ollama pull <model-name>
+```
+
+The engine picks it up automatically on the next request if it ranks higher in the preference list in `backend/pipeline/generator.py`.
+
+### Change the report format
+
+Edit `backend/data/raw/sanofi.md`. This file is the format template the LLM is shown for every generation. Changing its structure changes the output structure for all future reports.
+
+---
+
+## Roadmap
+
+- [ ] Automated source ingestion connectors (SEC EDGAR, NIH RePORTER, ClinicalTrials.gov)
+- [ ] Vector search over UNC faculty pages for better alignment matching
+- [ ] Per-claim confidence scores displayed inline in the UI
+- [ ] Report history and comparison dashboard
+- [ ] Audit log of every generation and source decision
+- [ ] Multi-university support beyond UNC-Chapel Hill
+
+---
+
+## License
+
+MIT
