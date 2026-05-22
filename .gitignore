@@ -1,7 +1,12 @@
 venv/
+.venv/
 __pycache__/
+**/__pycache__/
 *.pyc
 *.pyo
 .DS_Store
 .pytest_cache/
 backend/data/processed/
+*.pdf
+.env
+rewrite-exzample.md
